@@ -1,0 +1,4 @@
+# ignore an entire directory
+/out/
+# ignore an entire directory
+/.idea/
