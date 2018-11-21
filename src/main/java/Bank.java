@@ -45,10 +45,11 @@ public class Bank {
             rs = stmt.executeQuery("SELECT id FROM Banks WHERE name='"+name+"';");
             while (rs.next())
                 this.id =rs.getInt("id") ;
-            conn.close();
         } catch (SQLException |NullPointerException e) {
             System.out.println("Connecting to Database Failed");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
         this.name = name;
     }
@@ -67,10 +68,11 @@ public class Bank {
             while (rs.next()) {
                 uuids.add(rs.getString("uuid")) ;
             }
-            conn.close();
         } catch (SQLException |NullPointerException e) {
             System.out.println("Connecting to Database Failed");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
         // inits
 
@@ -95,10 +97,12 @@ public class Bank {
             rs = stmt.executeQuery("SELECT Acc_uuid FROM Accounts;");
             while (rs.next())
                 uuids.add(rs.getString("Acc_uuid")) ;
-            conn.close();
+
         } catch (SQLException |NullPointerException e) {
             System.out.println("Failed Generating a unique Account id");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
         // inits
         String uuid;
@@ -111,6 +115,13 @@ public class Bank {
         return  uuid;
     }
 
+    /**
+     * Generate a unigue UUID
+     * @param uuids existing uuids
+     * @param rng range
+     * @param len length
+     * @return a unique uuid
+     */
     private String getUniqueID(ArrayList<String> uuids, Random rng, int len) {
         String uuid;
         boolean nonUnique;
@@ -158,6 +169,8 @@ public class Bank {
         } catch (SQLException | NullPointerException e) {
             System.out.println("Error When Fetching the user");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
 
 
@@ -211,6 +224,8 @@ public class Bank {
         } catch (SQLException |NullPointerException e) {
             System.out.println("Error Adding a user to the Database");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
         // create an account for the user.
         Account newAccount = new Account(accName,newUser,this);

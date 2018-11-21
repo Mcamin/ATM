@@ -32,11 +32,10 @@ public class Transaction {
      */
     Transaction(double amount, String memo, String accID,Connection conn){
             Statement stmt;
-        try {conn = DBsetup.connect();
+        try {
             stmt = conn.createStatement();
             stmt.executeUpdate("INSERT INTO Transactions(amount,memo,timestamp,account_id) " +
                     "VALUES ("+amount+",'"+memo+"',NOW(),"+accID+");");
-            conn.close();
         } catch (SQLException | NullPointerException e) {
             System.out.println("Error Adding The Transaction to the Database");
             e.printStackTrace();

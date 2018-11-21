@@ -143,10 +143,11 @@ public class Account {
                         rs.getDate("timestamp").toString()));
 
             }
-            conn.close();
         } catch (SQLException |NullPointerException e) {
             System.out.println("Error Loading Transactions the Database");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
         System.out.printf("\nTransaction history for account %s\n",this.uuid);
         if(transactions!=null &&transactions.size()>0){

@@ -123,7 +123,7 @@ public class User {
      * @return Arraylist of accounts names
      */
     ArrayList<String> getAcctNames(){
-        Connection conn;
+        Connection conn = null;
         Statement stmt;
         ResultSet rs;
         ArrayList<String>AcctNames = new ArrayList<>();
@@ -133,12 +133,14 @@ public class User {
             rs=stmt.executeQuery("SELECT name from Accounts WHERE U_id="+Integer.parseInt(this.uuid)+";");
             while (rs.next()) {
                 AcctNames.add(rs.getString("name"));
-            }conn.close();
+            }
             return AcctNames;
 
         } catch (SQLException |NullPointerException e) {
             System.out.println("Error When Getting Accounts Names");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
      return null;
     }
@@ -165,10 +167,11 @@ public class User {
      */
     void printAcctTransHistory(String accname)
     { Account newAccount = null;
-        Connection conn;
+        Connection conn = null;
         Statement stmt;
         ResultSet rs;
-        try {conn = DBsetup.connect();
+
+        try {  conn = DBsetup.connect();
             stmt = conn.createStatement();
             rs=stmt.executeQuery("SELECT Acc_uuid,balance from Accounts WHERE name='"
                     +accname+"' AND U_id="+Integer.parseInt(this.uuid)+";");
@@ -176,12 +179,14 @@ public class User {
                  newAccount=new Account(accname,
                         rs.getString("Acc_uuid"),
                         rs.getDouble("balance"));
-            }conn.close();
+            }
             newAccount.printTransHistory();
 
         } catch (SQLException |NullPointerException e) {
             System.out.println("Error When Getting Accounts Transactions History");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
     }
 
@@ -191,11 +196,11 @@ public class User {
      * @return the balance of the account
      */
     double getAcctBalance(String accName){
+        Connection conn = null;
         Account newAccount = null;
-        Connection conn;
         Statement stmt;
         ResultSet rs;
-        try {conn = DBsetup.connect();
+        try { conn= DBsetup.connect();
             stmt = conn.createStatement();
             rs=stmt.executeQuery("SELECT Acc_uuid,balance from Accounts " +
                     "WHERE name='"+accName+"'AND U_id="
@@ -205,12 +210,13 @@ public class User {
                         rs.getString("Acc_uuid"),
                         rs.getDouble("balance"));
             }
-            conn.close();
             return newAccount.getBalance();
 
         } catch (SQLException |NullPointerException e) {
             System.out.println("Error When Getting the Account's Balance");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
         return 0;
     }
@@ -221,7 +227,7 @@ public class User {
      * @return the UUID of the account
      */
     String getAcctUUID(String accName){
-        Connection conn;
+        Connection conn = null;
         Statement stmt;
         ResultSet rs;
         Account newAccount = null;
@@ -235,12 +241,13 @@ public class User {
                         rs.getString("Acc_uuid"),
                         rs.getDouble("balance"));
             }
-            conn.close();
             return newAccount.getUUID();
 
         } catch (SQLException |NullPointerException e) {
             System.out.println("Error When Getting the Account's Balance");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
         return null;
     }
@@ -249,7 +256,7 @@ public class User {
      * Print Summaries for the accounts of the user.
      */
     void printAccountsSummary() {
-        Connection conn;
+        Connection conn = null;
         Statement stmt;
         ResultSet rs;
         ArrayList<Account> Accounts = new ArrayList<>();
@@ -262,10 +269,12 @@ public class User {
                         rs.getString("Acc_uuid"),
                         rs.getDouble("balance")));
             }
-            conn.close();
+
         } catch (SQLException |NullPointerException e) {
             System.out.println("Error When Getting the Account's Summaries");
             e.printStackTrace();
+        }finally {
+            DBsetup.close(conn);
         }
         System.out.printf("\n\n%s's accounts summary,\n", this.firstName);
         for (int a =0; a< Accounts.size();a++){
@@ -286,14 +295,15 @@ public class User {
         Connection conn = null;
         Statement stmt;
         ResultSet rs;
+        PreparedStatement preparedStmt = null;
         Account newAccount = null;
         try {conn = DBsetup.connect();
-             conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
-             conn.setAutoCommit(false);
+            conn.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+            conn.setAutoCommit(false);
             stmt = conn.createStatement();
             rs=stmt.executeQuery("SELECT Acc_uuid,balance from Accounts " +
                     "WHERE name='"+accName+"'AND U_id="
-                    +Integer.parseInt(this.uuid)+";");
+                    +Integer.parseInt(this.uuid)+" FOR UPDATE;");
             while (rs.next()) {
                 newAccount=new Account(accName,
                         rs.getString("Acc_uuid"),
@@ -304,27 +314,40 @@ public class User {
             // only when amount is not exceeding the balance
             if((newAccount.getBalance()+amount)>=0)
             {newAccount.addTransaction(amount,memo,conn);
-                newAccount.setBalance(amount);}
+                newAccount.setBalance(amount);
+
+            }else{
+                System.out.println("We are Sorry, The Account's balance is lower Than" +
+                        "The Amount you want to Withdraw");
+                return;
+            }
 
             //Update Account in Database
-            PreparedStatement preparedStmt = conn.prepareStatement("update Accounts set balance ="+
+                    preparedStmt = conn.prepareStatement("update Accounts set balance ="+
                     newAccount.getBalance()+"where name ='" +
                     newAccount.getAccName()+"' AND U_id="+
                     Integer.parseInt(this.uuid)+";");
 
-            preparedStmt.executeUpdate();
+           preparedStmt.executeUpdate();
             conn.commit();
-            conn.close();
         } //3rd Check : In case Check 1 and 2 are bypassed
         catch (MysqlDataTruncation e) {
-            System.out.printf("Nice Try Bypassing the Commandline Check!" +
-                    "The Amount must not exceed the account's balance "+
+            System.out.printf("The Amount must not exceed the account's balance "+
                     "(%.02f Euro) \n", newAccount.getBalance());
+            if (conn != null) {
+               DBsetup.rollback(conn);
+            }
             DBsetup.close(conn);
         } catch (SQLException e) {
+            e.getStackTrace();
+            if (conn != null) {
+                DBsetup.rollback(conn);
+            }
             System.out.println("Error When Updating Balance to database");
             DBsetup.close(conn);
-        }
+        }finally {
+                DBsetup.close(conn);
+            }
 
     }
 

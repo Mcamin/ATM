@@ -1,6 +1,10 @@
 
 
 
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -130,7 +134,6 @@ public class ATM {
      */
 
     private static void transferFunds(User theUser, Scanner sc) {
-
         //inits
         String fromAcct;
         String toAcct;
@@ -239,7 +242,7 @@ public class ATM {
         sc.nextLine();
 
         //get a memo
-        System.out.print("Enter a memo:");
+        System.out.println("Enter a memo:");
         memo=sc.nextLine();
 
         //do the withdrawal
@@ -259,6 +262,7 @@ public class ATM {
 
     private static void depositFunds(User theUser, Scanner sc)
     { //inits
+
         String toAcct;
         String memo;
         double amount;
@@ -290,7 +294,7 @@ public class ATM {
         sc.nextLine();
 
         //get a memo
-        System.out.print("Enter a memo:");
+        System.out.println("Enter a memo:");
         memo=sc.nextLine();
 
         //do the deposit

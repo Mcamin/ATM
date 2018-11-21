@@ -4,9 +4,9 @@ import java.sql.SQLException;
 
 public class DBsetup {
     private static final String JDBC_DRIVER = "com.mysql.cj.jdbc.Driver";
-    private static final String DB_URL = "jdbc:mysql://ecinstance.cnb5pn3mjcmy.eu-central-1.rds.amazonaws.com:3306/myAtm";
-    private static final String USER = "admin";
-    private static final String PASS = "zg_7YpTh_9)e{~.5";
+    private static final String DB_URL = "jdbc:mysql://";
+    private static final String USER = "";
+    private static final String PASS = "";
     private static Connection conn = null;
 
     static Connection connect() {
@@ -17,11 +17,11 @@ public class DBsetup {
             conn = DriverManager.getConnection(DB_URL, USER, PASS);
             return conn;
         } catch (ClassNotFoundException e) {
-            System.out.println("MySQL JDBC Driver not found.");
+            System.err.println("MySQL JDBC Driver not found.");
 
 
         } catch (SQLException e) {
-            System.out.println("Connection to database failed.");
+            System.err.println("Connection to database failed.");
         }
         return null;
     }
@@ -29,7 +29,17 @@ public class DBsetup {
         try {
             c.close();
         } catch (SQLException e1) {
-            System.out.println("Could not Close the connection.");
+            System.err.println("Could not Close the connection.");
+        }
+    }
+    static void rollback(Connection c ){
+        try {
+            System.err.println("Transaction is being rolled back");
+            c.rollback();
+        } catch(SQLException excep) {
+            System.err.print("Failed rollback");
+            excep.getStackTrace();
+
         }
     }
 }
